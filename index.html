@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aegis Command Center | Security Patrol</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -520,6 +523,7 @@
                         document.getElementById('admin-header-name').innerText = currentUser.nama;
                         loaderText.innerText = 'MEMUAT COMMAND CENTER...';
                         switchView(viewManagement);
+                        fetchAdminData(); // Otomatis tarik data saat masuk Dashboard
                     } else {
                         document.getElementById('sec-name').innerText = currentUser.nama.toUpperCase();
                         document.getElementById('sec-id').innerText = `ID: ${currentUser.id || '-'} • Sedang Bertugas`;
@@ -779,12 +783,60 @@
         async function fetchAdminData() {
             showToast("Menarik data terbaru dari server...", "info");
             
-            // Tahap 2: Disini nanti kita panggil fungsi fetch() ke Backend (GAS_URL).
-            // Sementara di Tahap 1, fungsi ini disiapkan kerangkanya dulu.
-            
-            setTimeout(() => {
-                showToast("Berhasil terhubung. Menunggu update integrasi backend (Tahap 2).", "success");
-            }, 1000);
+            try {
+                // Tembak request ke Apps Script untuk minta data dashboard
+                const res = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'get_dashboard' })
+                });
+                const result = await res.json();
+                
+                if (result.status === 'success') {
+                    const data = result.data;
+                    
+                    // 1. Update Angka KPI Atas
+                    document.getElementById('stat-petugas').innerText = data.total_petugas;
+                    document.getElementById('stat-scan').innerText = data.scan_hari_ini;
+                    document.getElementById('stat-insiden').innerText = data.total_insiden;
+                    
+                    // 2. Update Dropdown Filter Lokasi (Hanya diisi jika masih kosong)
+                    const selLokasi = document.getElementById('filter-lokasi');
+                    if (selLokasi.options.length <= 1) { 
+                        data.lokasi.forEach(loc => {
+                            selLokasi.innerHTML += `<option value="${loc}">${loc}</option>`;
+                        });
+                    }
+                    
+                    // 3. Update Tabel Log Patroli
+                    const tbody = document.getElementById('patrol-log-body');
+                    tbody.innerHTML = ''; // Bersihkan tabel
+                    
+                    if (data.logs.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-500 italic text-xs">Belum ada data patroli.</td></tr>';
+                    } else {
+                        data.logs.forEach(log => {
+                            // Cek apakah ada link foto, kalau ada jadikan tombol kecil
+                            let linkBukti = (log.bukti && log.bukti !== "-") 
+                                ? `<a href="${log.bukti}" target="_blank" class="px-2 py-1 bg-cyan-900/50 text-cyan-400 rounded text-[10px] hover:bg-cyan-500 hover:text-white transition">CEK FOTO</a>` 
+                                : '<span class="text-[10px] text-slate-600">-</span>';
+                                
+                            tbody.innerHTML += `
+                                <tr class="hover:bg-slate-800/50 transition-colors border-b border-slate-800/50">
+                                    <td class="p-4 text-xs font-mono text-slate-400">${log.waktu}</td>
+                                    <td class="p-4"><span class="font-bold text-white text-sm block">${log.nama}</span></td>
+                                    <td class="p-4"><span class="px-2 py-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded text-xs font-bold">${log.lokasi}</span></td>
+                                    <td class="p-4 text-center">${linkBukti}</td>
+                                </tr>
+                            `;
+                        });
+                    }
+                    showToast("Dashboard berhasil diperbarui!", "success");
+                } else {
+                    showToast("Gagal: " + result.message, "error");
+                }
+            } catch (err) {
+                showToast("Koneksi gagal saat menarik data.", "error");
+            }
         }
 
     </script>

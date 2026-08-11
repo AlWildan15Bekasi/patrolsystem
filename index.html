@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aegis Command Center | Security Patrol</title>
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="favicon.png">
-
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -170,10 +166,6 @@
                     <i data-lucide="arrow-right" class="w-5 h-5"></i>
                 </button>
             </form>
-
-            <div class="mt-8 pt-6 border-t border-slate-800 text-center">
-                <p class="text-xs text-slate-500 font-mono">Ver: 2.1.0 | Secure Connection <i data-lucide="lock" class="w-3 h-3 inline text-emerald-500"></i></p>
-            </div>
         </div>
     </section>
 
@@ -198,8 +190,6 @@
 
         <!-- Main Content Security -->
         <main class="flex-grow p-4 space-y-6 max-w-lg mx-auto w-full">
-            
-            <!-- Target Status (Untuk simulasi UI) -->
             <div class="glass-panel rounded-2xl p-5 border-l-4 border-amber-500 relative overflow-hidden">
                 <i data-lucide="shield" class="absolute -right-4 -bottom-4 w-24 h-24 text-amber-500/10 transform -rotate-12"></i>
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Status Shift Saat Ini</h3>
@@ -245,14 +235,20 @@
 
         <!-- Camera Area -->
         <div class="flex-grow relative flex items-center justify-center bg-slate-900 overflow-hidden">
+            <!-- Switch Camera Button (Muncul pas Selfie) -->
+            <button id="btn-switch-cam" onclick="toggleCamera()" class="absolute top-20 right-4 z-30 p-3 bg-slate-800/80 text-cyan-400 rounded-full border border-cyan-500/50 backdrop-blur-md shadow-lg hidden">
+                <i data-lucide="refresh-ccw" class="w-6 h-6"></i>
+            </button>
+
             <!-- QR Reader Container -->
             <div id="qr-reader" class="w-full h-full object-cover absolute inset-0"></div>
             
             <!-- Selfie Video Container -->
-            <video id="selfie-video" class="w-full h-full object-cover absolute inset-0 hidden" autoplay playsinline></video>
+            <!-- PENTING: playsinline dan muted ditambahkan agar iOS/Safari tidak nge-block video -->
+            <video id="selfie-video" class="w-full h-full object-cover absolute inset-0 hidden" autoplay playsinline muted></video>
             <canvas id="selfie-canvas" class="hidden"></canvas>
             
-            <!-- Target Box -->
+            <!-- Target Box untuk QR -->
             <div id="qr-frame-overlay" class="scanner-frame w-[250px] h-[250px] z-10 pointer-events-none">
                 <span></span>
                 <div id="laser-line" class="absolute top-0 left-0 w-full h-[2px] bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,1)] animate-scan-line"></div>
@@ -332,7 +328,7 @@
                     </div>
                     <div class="flex items-center gap-3 border-l border-slate-700 pl-6">
                         <div class="text-right hidden sm:block">
-                            <p class="text-sm font-bold text-white" id="admin-header-name">ADMIN</p>
+                            <p class="text-sm font-bold text-white uppercase" id="admin-header-name">ADMIN</p>
                             <p class="text-xs font-mono text-slate-400">Master Admin</p>
                         </div>
                         <button onclick="logout()" class="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/30 rounded-lg transition-colors" title="Logout">
@@ -344,7 +340,6 @@
         </nav>
 
         <main class="flex-grow max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6">
-            
             <!-- Global Stats -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div class="glass-panel p-5 rounded-xl border-t-2 border-t-cyan-500 relative overflow-hidden group">
@@ -371,14 +366,14 @@
 
             <!-- Main Content Area -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Table Realtime Log (Dengan Filter) -->
+                <!-- Table Realtime Log -->
                 <div class="lg:col-span-2 glass-panel rounded-xl border border-slate-800 flex flex-col h-[500px]">
                     <div class="p-4 border-b border-slate-800 flex flex-col gap-4 bg-slate-900/50">
                         <div class="flex justify-between items-center">
                             <h2 class="font-bold text-white flex items-center gap-2">
                                 <i data-lucide="activity" class="w-5 h-5 text-cyan-400"></i> Live Patrol Log
                             </h2>
-                            <button onclick="fetchAdminData()" class="p-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-slate-300 transition-colors">
+                            <button onclick="fetchAdminData()" class="p-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-slate-300 transition-colors" title="Tarik Data Terbaru">
                                 <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                             </button>
                         </div>
@@ -391,8 +386,7 @@
                             </div>
                             <select id="filter-lokasi" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300 outline-none focus:border-cyan-500 transition-colors cursor-pointer w-full sm:w-auto">
                                 <option value="">Semua Lokasi</option>
-                                <option value="LT1">Lantai 1</option>
-                                <option value="LT2">Lantai 2</option>
+                                <!-- Akan diisi dinamis di Tahap 2 -->
                             </select>
                             <input type="date" id="filter-tanggal" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300 outline-none focus:border-cyan-500 transition-colors cursor-pointer w-full sm:w-auto">
                         </div>
@@ -409,7 +403,6 @@
                                 </tr>
                             </thead>
                             <tbody class="text-sm text-slate-300 font-medium divide-y divide-slate-800" id="patrol-log-body">
-                                <!-- Data kosong tanpa dummy -->
                                 <tr>
                                     <td colspan="4" class="p-8 text-center text-slate-500 italic text-xs">Menunggu tarikan data dari server... (Klik Refresh)</td>
                                 </tr>
@@ -427,13 +420,11 @@
                         </h2>
                     </div>
                     <div class="flex-grow relative flex items-center justify-center bg-slate-950 overflow-hidden">
-                        <!-- Radar Sweep -->
                         <div class="w-[300px] h-[300px] border border-cyan-500/20 rounded-full absolute"></div>
                         <div class="w-[200px] h-[200px] border border-cyan-500/30 rounded-full absolute"></div>
                         <div class="w-[100px] h-[100px] border border-cyan-500/40 rounded-full absolute"></div>
                         <div class="w-1/2 h-[300px] absolute right-1/2 origin-right animate-spin-slow bg-gradient-to-l from-cyan-500/20 to-transparent" style="clip-path: polygon(100% 50%, 0 0, 0 100%);"></div>
                         
-                        <!-- Radar Point (Ping terakhir) -->
                         <div class="absolute top-[40%] left-[60%] flex flex-col items-center">
                             <span class="w-3 h-3 bg-emerald-400 rounded-full shadow-[0_0_15px_rgba(52,211,153,1)] animate-pulse"></span>
                             <span class="text-[9px] font-mono text-emerald-400 mt-1 uppercase tracking-widest bg-slate-900/50 px-1 rounded">Standby</span>
@@ -457,6 +448,7 @@
         let qrScanner = null;
         let currentStream = null;
         let scannedLocationId = null;
+        let currentFacingMode = "user"; // Default selfie camera mode
 
         // DOM Elements
         const viewLogin = document.getElementById('view-login');
@@ -493,7 +485,6 @@
             }, 4000);
         }
 
-        // --- Navigation Logic ---
         function switchView(targetView) {
             loader.classList.remove('opacity-0', 'pointer-events-none');
             setTimeout(() => {
@@ -507,10 +498,10 @@
             }, 600); 
         }
 
-        // --- Login Logic (Real API Call) ---
+        // --- Login Logic ---
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('login-id').value.trim();
+            const id = document.getElementById('login-id').value;
             const pass = document.getElementById('login-pass').value;
             
             loaderText.innerText = 'AUTENTIKASI SERVER...';
@@ -526,22 +517,22 @@
                 if (result.status === 'success') {
                     currentUser = result.data;
                     if (currentUser.role === 'admin') {
-                        document.getElementById('admin-header-name').innerText = (currentUser.nama || "ADMIN").toUpperCase();
+                        document.getElementById('admin-header-name').innerText = currentUser.nama;
                         loaderText.innerText = 'MEMUAT COMMAND CENTER...';
                         switchView(viewManagement);
                     } else {
-                        document.getElementById('sec-name').innerText = (currentUser.nama || "PETUGAS").toUpperCase();
+                        document.getElementById('sec-name').innerText = currentUser.nama.toUpperCase();
                         document.getElementById('sec-id').innerText = `ID: ${currentUser.id || '-'} • Sedang Bertugas`;
                         document.getElementById('sec-avatar').src = `https://ui-avatars.com/api/?name=${currentUser.nama}&background=1e293b&color=22d3ee`;
                         loaderText.innerText = 'MEMUAT DASHBOARD PATROLI...';
                         switchView(viewSecurity);
                     }
                 } else {
-                    showToast(result.message || "Username atau sandi tidak valid!", "error");
+                    showToast(result.message, "error");
                     loader.classList.add('opacity-0', 'pointer-events-none');
                 }
             } catch (err) {
-                showToast("Koneksi ke Database gagal. Cek URL App Script.", "error");
+                showToast("Koneksi gagal. Cek jaringan atau URL Script.", "error");
                 loader.classList.add('opacity-0', 'pointer-events-none');
             }
         });
@@ -553,7 +544,7 @@
             switchView(viewLogin);
         }
 
-        // --- Scanner Logic (Role Security) ---
+        // --- STREAMING_CHUNK:Implementing Camera and Scanner Logic ---
         const modalScanner = document.getElementById('modal-scanner');
         const scanProcess = document.getElementById('scan-processing');
         const processText = document.getElementById('process-text');
@@ -565,6 +556,7 @@
         const stepIcon = document.getElementById('step-icon');
         const stepDesc = document.getElementById('step-desc');
         const stepSubDesc = document.getElementById('step-sub-desc');
+        const btnSwitchCam = document.getElementById('btn-switch-cam');
 
         function openScanner() {
             showToast("Meminta izin akses kamera...", "info");
@@ -574,6 +566,7 @@
             qrFrameOverlay.classList.remove('hidden');
             btnTakeSelfie.classList.add('hidden');
             scanProcess.classList.add('hidden');
+            btnSwitchCam.classList.add('hidden');
             
             scannerTitle.innerText = "Tahap 1: SCAN QR";
             stepIcon.setAttribute('data-lucide', 'qr-code');
@@ -588,23 +581,27 @@
                 qrScanner = new Html5Qrcode("qr-reader");
             }
             
+            // OPTIMASI SCENNER: FPS dinaikkan ke 15, Format dibatasi hanya QR Code biar enteng
             qrScanner.start(
                 { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
+                { 
+                    fps: 15, 
+                    qrbox: { width: 250, height: 250 },
+                    formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] 
+                },
                 (decodedText) => {
-                    // Ketika QR Berhasil Terbaca Otomatis
                     scannedLocationId = decodedText;
-                    showToast("Lokasi terdeteksi! Menyiapkan kamera depan...", "success");
+                    showToast("Lokasi terdeteksi! Mengaktifkan kamera selfie...", "success");
                     
                     qrScanner.stop().then(() => {
-                        startSelfieCamera(); // Langsung pindah ke selfie tanpa tombol
+                        setTimeout(startSelfieCamera, 500); // Kasih jeda dikit biar kamera HP gak kaget
                     }).catch(err => console.log(err));
                 },
-                (err) => { /* Ignore background scanning errors */ }
+                (err) => { /* Ignored */ }
             ).then(() => {
-                showToast("Kamera aktif. Silakan scan QR Code titik patroli.", "success");
+                showToast("Kamera aktif. Silakan scan titik patroli.", "success");
             }).catch(err => {
-                showToast("Akses kamera ditolak/tidak tersedia. Harap izinkan di pengaturan browser.", "error");
+                showToast("Kamera diblokir/tidak tersedia. Harap izinkan di pengaturan.", "error");
                 closeScanner();
             });
         }
@@ -614,6 +611,7 @@
             qrFrameOverlay.classList.add('hidden');
             selfieVideo.classList.remove('hidden');
             btnTakeSelfie.classList.remove('hidden');
+            btnSwitchCam.classList.remove('hidden'); // Munculkan tombol rotate kamera
             
             scannerTitle.innerText = "Tahap 2: VERIFIKASI WAJAH";
             stepIcon.setAttribute('data-lucide', 'user-focus');
@@ -621,15 +619,28 @@
             stepSubDesc.innerText = `Area: ${scannedLocationId}`;
             lucide.createIcons();
 
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-                .then(stream => {
-                    currentStream = stream;
-                    selfieVideo.srcObject = stream;
-                })
-                .catch(err => {
-                    showToast("Kamera depan tidak dapat diakses. Pastikan izin diberikan.", "error");
-                    closeScanner();
-                });
+            if(currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
+            navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: currentFacingMode } 
+            })
+            .then(stream => {
+                currentStream = stream;
+                selfieVideo.srcObject = stream;
+                // Pastikan video jalan
+                selfieVideo.play().catch(e => console.log("Auto-play prevented", e));
+            })
+            .catch(err => {
+                showToast("Kamera gagal diakses. Coba gunakan tombol putar kamera.", "error");
+            });
+        }
+
+        // FUNGSI BARU: SWITCH KAMERA DEPAN/BELAKANG
+        function toggleCamera() {
+            currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
+            startSelfieCamera(); // Restart fungsi selfie dengan mode kamera yang baru
         }
 
         function closeScanner() {
@@ -650,7 +661,7 @@
             canvas.getContext('2d').drawImage(selfieVideo, 0, 0);
             
             const base64Image = canvas.toDataURL('image/jpeg', 0.6); 
-            currentStream.getTracks().forEach(track => track.stop());
+            if(currentStream) currentStream.getTracks().forEach(track => track.stop());
             
             processText.innerText = 'Mengirim Laporan Patroli...';
             scanProcess.classList.remove('hidden');
@@ -678,7 +689,7 @@
             closeScanner();
         }
 
-        // --- Alert Modal Logic (Lapor Insiden) ---
+        // --- STREAMING_CHUNK:Incident Alert Functions ---
         let selectedUrgency = 'RENDAH';
         const modalAlert = document.getElementById('modal-alert');
         const alertContent = document.getElementById('alert-modal-content');
@@ -764,11 +775,15 @@
             closeAlertModal();
         }
 
+        // --- STREAMING_CHUNK:Admin Dashboard Integration Prep... ---
         async function fetchAdminData() {
-            // Karena ini untuk setup awal, tabel aku biarkan kosong menunggu script backend fungsi narik data nanti.
-            showToast("Memperbarui log dari server...", "info");
+            showToast("Menarik data terbaru dari server...", "info");
+            
+            // Tahap 2: Disini nanti kita panggil fungsi fetch() ke Backend (GAS_URL).
+            // Sementara di Tahap 1, fungsi ini disiapkan kerangkanya dulu.
+            
             setTimeout(() => {
-                showToast("Log diperbarui.", "success");
+                showToast("Berhasil terhubung. Menunggu update integrasi backend (Tahap 2).", "success");
             }, 1000);
         }
 

@@ -26,15 +26,9 @@
                         cyan: { 400: '#22d3ee', 500: '#06b6d4' }
                     },
                     animation: {
-                        'scan-line': 'scan 2s linear infinite',
                         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'spin-slow': 'spin 4s linear infinite',
-                    },
-                    keyframes: {
-                        scan: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(200px)' },
-                        }
+                        'bounce-slow': 'bounce 2s infinite',
                     }
                 }
             }
@@ -76,7 +70,7 @@
             opacity: 1;
         }
 
-        /* OVERRIDE HTML5-QRCODE STYLES BIAR RAPI & FULLSCREEN */
+        /* OVERRIDE HTML5-QRCODE STYLES BIAR FULLSCREEN & PRESISI */
         #qr-reader {
             width: 100% !important;
             height: 100% !important;
@@ -97,11 +91,9 @@
             top: 0;
             left: 0;
         }
-        #qr-reader__dashboard {
-            display: none !important; /* Hilangkan tombol default dari library */
-        }
+        #qr-reader__dashboard { display: none !important; }
 
-        /* KOTAK TARGET SCANNER KITA */
+        /* KOTAK TARGET SCANNER KITA (Minimalis & Presisi) */
         .scanner-frame {
             position: absolute;
             top: 50%;
@@ -110,7 +102,7 @@
             width: 250px;
             height: 250px;
             z-index: 10;
-            pointer-events: none; /* Biar gak nutupin touch event */
+            pointer-events: none; 
         }
         .scanner-frame::before, .scanner-frame::after,
         .scanner-frame span::before, .scanner-frame span::after {
@@ -121,18 +113,23 @@
         .scanner-frame span::before { bottom: 0; left: 0; border-width: 0 0 4px 4px; }
         .scanner-frame span::after { bottom: 0; right: 0; border-width: 0 4px 4px 0; }
 
-        /* Toast Animation */
-        @keyframes slideInUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        /* Floating Button Z-Index Tinggi */
+        .btn-floating {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999; /* Pastikan selalu paling atas */
         }
+
+        @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .toast-enter { animation: slideInUp 0.3s ease-out forwards; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
 
     <!-- GLOBAL LOADER -->
-    <div id="global-loader" class="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-md transition-opacity duration-300 opacity-0 pointer-events-none">
+    <div id="global-loader" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-md transition-opacity duration-300 opacity-0 pointer-events-none">
         <div class="relative w-24 h-24 flex items-center justify-center mb-6">
             <div class="absolute inset-0 border-t-2 border-r-2 border-cyan-500 rounded-full animate-spin"></div>
             <div class="absolute inset-2 border-b-2 border-l-2 border-amber-400 rounded-full animate-spin-slow"></div>
@@ -143,6 +140,26 @@
 
     <!-- TOAST NOTIFICATION CONTAINER -->
     <div id="toast-container" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[1000] flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none"></div>
+
+    <!-- UI ALARM / REMINDER JADWAL PATROLI (BARU) -->
+    <div id="modal-alarm" class="fixed inset-0 z-[9999] bg-rose-950/95 backdrop-blur-md hidden flex-col items-center justify-center p-6 transition-opacity duration-300 opacity-0">
+        <div class="w-32 h-32 bg-rose-500/20 rounded-full flex items-center justify-center mb-6 animate-pulse-slow border-2 border-rose-500">
+            <i data-lucide="bell-ring" class="w-16 h-16 text-rose-500 animate-bounce-slow"></i>
+        </div>
+        <h2 class="text-3xl font-black text-white tracking-widest uppercase mb-2 text-center drop-shadow-[0_0_10px_rgba(244,63,94,0.8)]">WAKTUNYA PATROLI</h2>
+        <p class="text-rose-400 font-mono text-2xl mb-8 font-bold bg-black/50 px-6 py-2 rounded-lg border border-rose-500/30" id="alarm-time">00:00</p>
+        
+        <div class="bg-slate-900/80 border border-rose-500/50 p-6 rounded-xl w-full max-w-sm text-center mb-10 shadow-lg">
+            <p class="text-xs text-slate-400 uppercase tracking-widest mb-2 font-bold flex items-center justify-center gap-2">
+                <i data-lucide="clipboard-list" class="w-4 h-4"></i> Instruksi Khusus
+            </p>
+            <p class="text-lg text-white font-medium" id="alarm-desc">Patroli Semua Titik</p>
+        </div>
+
+        <button onclick="closeAlarm()" class="w-full max-w-sm bg-rose-600 hover:bg-rose-500 text-white py-4 rounded-xl font-black tracking-widest shadow-[0_0_40px_rgba(244,63,94,0.6)] transition-all flex items-center justify-center gap-2 transform hover:scale-105 active:scale-95">
+            <i data-lucide="shield-check" class="w-6 h-6"></i> SIAP LAKSANAKAN
+        </button>
+    </div>
 
     <!-- VIEW 1: LOGIN PAGE -->
     <section id="view-login" class="view-section active flex-col items-center justify-center min-h-screen p-4 relative z-10">
@@ -160,7 +177,6 @@
             </div>
 
             <form id="login-form" class="space-y-6">
-                <!-- Username Input -->
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Username</label>
                     <div class="relative group">
@@ -172,8 +188,6 @@
                             placeholder="Masukkan Username">
                     </div>
                 </div>
-
-                <!-- Password Input -->
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sandi Akses</label>
                     <div class="relative group">
@@ -185,7 +199,6 @@
                             placeholder="••••••••">
                     </div>
                 </div>
-
                 <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white py-3.5 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] flex items-center justify-center gap-2 mt-4">
                     <span>Masuk Sistem</span>
                     <i data-lucide="arrow-right" class="w-5 h-5"></i>
@@ -196,7 +209,6 @@
 
     <!-- VIEW 2: ROLE SECURITY (MOBILE PATROL UI) -->
     <section id="view-security" class="view-section flex-col min-h-screen bg-slate-950 pb-20">
-        <!-- Header Security -->
         <header class="glass-panel sticky top-0 z-40 px-4 py-4 border-b border-slate-800 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="relative">
@@ -213,8 +225,8 @@
             </button>
         </header>
 
-        <!-- Main Content Security -->
-        <main class="flex-grow p-4 space-y-6 max-w-lg mx-auto w-full">
+        <main class="flex-grow p-4 space-y-4 max-w-lg mx-auto w-full">
+            <!-- Card 1: Status Patroli -->
             <div class="glass-panel rounded-2xl p-5 border-l-4 border-amber-500 relative overflow-hidden">
                 <i data-lucide="shield" class="absolute -right-4 -bottom-4 w-24 h-24 text-amber-500/10 transform -rotate-12"></i>
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Status Shift Saat Ini</h3>
@@ -226,8 +238,20 @@
                 </div>
             </div>
 
+            <!-- Card 2: Jadwal Patroli Berikutnya (BARU) -->
+            <div class="glass-panel rounded-2xl p-5 border-l-4 border-cyan-500 relative overflow-hidden">
+                <i data-lucide="clock" class="absolute -right-4 -bottom-4 w-24 h-24 text-cyan-500/10 transform -rotate-12"></i>
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Jadwal Shift Berikutnya</h3>
+                <div class="flex flex-col mt-2 relative z-10">
+                    <span class="text-2xl font-black text-white font-mono tracking-wider" id="next-patrol-time">--:--</span>
+                    <p class="text-sm font-medium text-cyan-400 mt-1 flex items-center gap-1">
+                        <i data-lucide="info" class="w-4 h-4"></i> <span id="next-patrol-desc">Memuat data jadwal...</span>
+                    </p>
+                </div>
+            </div>
+
             <!-- Action Buttons -->
-            <div class="flex flex-col items-center py-6 space-y-8">
+            <div class="flex flex-col items-center py-8 space-y-8">
                 <!-- Tombol Scan -->
                 <button onclick="openScanner()" class="relative group">
                     <div class="absolute inset-0 bg-cyan-500/20 rounded-full blur-xl group-hover:bg-cyan-500/40 transition-all duration-300 animate-pulse-slow"></div>
@@ -238,7 +262,7 @@
                     </div>
                 </button>
 
-                <!-- Tombol Alert / Panic Button -->
+                <!-- Tombol Alert -->
                 <button onclick="openAlertModal()" class="w-full max-w-xs bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/50 text-rose-400 py-3.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(244,63,94,0.2)]">
                     <i data-lucide="siren" class="w-5 h-5 animate-pulse"></i>
                     LAPOR INSIDEN CEPAT
@@ -250,67 +274,61 @@
     <!-- UI SCANNER MODAL (QR & SELFIE) -->
     <div id="modal-scanner" class="fixed inset-0 z-[100] bg-black hidden flex-col transition-opacity duration-300 opacity-0 overflow-hidden">
         
-        <!-- Fullscreen Camera Area -->
-        <div class="absolute inset-0 w-full h-full bg-slate-950">
+        <!-- Fullscreen Container -->
+        <div class="absolute inset-0 w-full h-full bg-black">
             
             <!-- AREA 1: QR READER -->
             <div id="qr-container" class="absolute inset-0 w-full h-full">
-                <!-- Wrapper html5-qrcode -->
                 <div id="qr-reader" class="w-full h-full"></div>
-                
-                <!-- Target Box Overlay (Garis Biru Kotak & Radar Naik Turun) -->
+                <!-- Garis Biru Kotak -->
                 <div class="scanner-frame" id="qr-frame-overlay">
                     <span></span>
-                    <!-- Radar scan line -->
-                    <div id="laser-line" class="absolute top-0 left-0 w-full h-[2px] bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,1)] animate-scan-line"></div>
                 </div>
             </div>
 
-            <!-- AREA 2: SELFIE VIDEO PREVIEW (Realtime Camera) -->
-            <!-- Atribut playsinline autoplay muted penting agar layar tidak hitam di Mobile -->
+            <!-- AREA 2: SELFIE VIDEO PREVIEW (Realtime Camera Fullscreen) -->
+            <!-- Diberi z-index 10 agar muncul di atas QR saat aktif -->
             <video id="selfie-video" class="absolute inset-0 w-full h-full object-cover hidden z-10" autoplay playsinline muted></video>
             <canvas id="selfie-canvas" class="hidden"></canvas>
             
             <!-- Loading overlay during process -->
-            <div id="scan-processing" class="absolute inset-0 bg-black/80 z-40 hidden flex-col items-center justify-center backdrop-blur-sm">
-                <i data-lucide="loader-2" class="w-12 h-12 text-cyan-400 animate-spin mb-4"></i>
-                <p class="text-white font-mono text-sm" id="process-text">Memverifikasi...</p>
+            <div id="scan-processing" class="absolute inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center backdrop-blur-sm">
+                <i data-lucide="loader-2" class="w-16 h-16 text-cyan-400 animate-spin mb-4"></i>
+                <p class="text-cyan-400 font-mono text-sm tracking-widest uppercase" id="process-text">Memverifikasi...</p>
             </div>
         </div>
 
-        <!-- Top bar (Mengambang di atas video) -->
-        <div class="absolute top-0 left-0 w-full p-4 flex justify-between items-center bg-gradient-to-b from-black/90 to-transparent z-30">
-            <button onclick="closeScanner()" class="p-2 text-white bg-slate-800/50 rounded-full backdrop-blur">
+        <!-- Top bar (Mengambang di atas kamera) -->
+        <div class="absolute top-0 left-0 w-full p-4 flex justify-between items-center bg-gradient-to-b from-black/90 to-transparent z-40">
+            <button onclick="closeScanner()" class="p-2 text-white bg-slate-800/80 rounded-full backdrop-blur border border-slate-700">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
-            <span class="font-mono text-cyan-400 text-sm font-bold bg-black/50 px-3 py-1 rounded border border-cyan-500/30" id="scanner-title">Tahap 1: SCAN QR</span>
+            <span class="font-mono text-cyan-400 text-sm font-bold bg-black/60 px-4 py-1.5 rounded-full border border-cyan-500/30 shadow-[0_0_10px_rgba(34,211,238,0.2)]" id="scanner-title">Tahap 1: SCAN QR</span>
             
             <!-- Tombol Switch Camera -->
-            <button id="btn-switch-cam" onclick="toggleCamera()" class="p-2 text-cyan-400 bg-slate-800/80 rounded-full backdrop-blur shadow-lg hidden border border-cyan-500/30">
+            <button id="btn-switch-cam" onclick="toggleCamera()" class="p-2 text-cyan-400 bg-slate-800/80 rounded-full backdrop-blur shadow-[0_0_15px_rgba(34,211,238,0.3)] hidden border border-cyan-500/50">
                 <i data-lucide="refresh-ccw" class="w-6 h-6"></i>
             </button>
             <div id="top-bar-spacer" class="w-10"></div> 
         </div>
 
-        <!-- Bottom Action Bar (Mengambang di bawah) -->
-        <div class="absolute bottom-0 left-0 w-full p-6 pb-12 bg-gradient-to-t from-black via-black/80 to-transparent z-30 flex flex-col items-center">
-            
-            <!-- Teks Panduan Scan QR -->
-            <div id="qr-info-text" class="text-center w-full transition-all duration-300">
-                <i data-lucide="qr-code" class="w-8 h-8 text-cyan-500 mx-auto mb-3 animate-pulse"></i>
-                <h3 class="text-lg font-bold text-white mb-1">Arahkan kamera ke QR Code</h3>
-                <p class="text-xs text-slate-300 drop-shadow-md">Sistem akan otomatis membaca kode QR.</p>
+        <!-- Teks Panduan QR (Floating bawah) -->
+        <div id="qr-info-text" class="absolute bottom-12 left-0 w-full p-6 text-center z-30 pointer-events-none transition-all duration-300">
+            <div class="inline-block bg-black/60 backdrop-blur-md border border-slate-700/50 rounded-2xl p-4 shadow-xl">
+                <i data-lucide="qr-code" class="w-8 h-8 text-cyan-500 mx-auto mb-2 animate-pulse"></i>
+                <h3 class="text-base font-bold text-white mb-1">Arahkan kamera ke QR</h3>
+                <p class="text-xs text-slate-300">Pemindaian berjalan otomatis.</p>
             </div>
-            
-            <!-- Tombol Selfie Melayang (Awalnya disembunyikan) -->
-            <button onclick="takeSelfieAndSubmit()" id="btn-take-selfie" class="w-full max-w-sm bg-cyan-600 hover:bg-cyan-500 text-white py-4 rounded-xl font-bold shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all hidden flex items-center justify-center gap-2 transform hover:scale-105 active:scale-95">
-                <i data-lucide="camera" class="w-5 h-5"></i> AMBIL SELFIE & KIRIM
-            </button>
         </div>
+        
+        <!-- Tombol Selfie Melayang (Floating Button - Pasti Muncul!) -->
+        <button onclick="takeSelfieAndSubmit()" id="btn-take-selfie" class="btn-floating w-full max-w-xs bg-cyan-600 hover:bg-cyan-500 text-white py-4 rounded-xl font-bold shadow-[0_0_30px_rgba(34,211,238,0.5)] transition-all hidden flex items-center justify-center gap-2 transform active:scale-95">
+            <i data-lucide="camera" class="w-6 h-6"></i> AMBIL SELFIE & KIRIM
+        </button>
     </div>
 
     <!-- UI ALERT MODAL -->
-    <div id="modal-alert" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm hidden flex-col items-center justify-end sm:justify-center p-4 transition-opacity duration-300 opacity-0">
+    <div id="modal-alert" class="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-sm hidden flex-col items-center justify-end sm:justify-center p-4 transition-opacity duration-300 opacity-0">
         <div class="w-full max-w-md bg-slate-900 border border-rose-500/30 rounded-2xl shadow-[0_0_40px_rgba(244,63,94,0.2)] overflow-hidden transform transition-transform duration-300 translate-y-10" id="alert-modal-content">
             <div class="bg-rose-500/10 p-4 border-b border-rose-500/20 flex justify-between items-center">
                 <h3 class="text-rose-500 font-bold flex items-center gap-2 tracking-wide"><i data-lucide="siren" class="w-5 h-5"></i> LAPORAN INSIDEN</h3>
@@ -329,13 +347,11 @@
                     <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Deskripsi Kejadian</label>
                     <textarea id="alert-desc" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-sm text-white placeholder-slate-600 focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none" rows="3" placeholder="Ketik kronologi singkat di sini..."></textarea>
                 </div>
-                
                 <input type="file" id="alert-photo" accept="image/*" class="hidden" onchange="document.getElementById('alert-photo-name').innerText = this.files[0] ? this.files[0].name : ''">
                 <button onclick="document.getElementById('alert-photo').click()" class="w-full bg-slate-800 border border-slate-700 hover:border-cyan-500/50 text-cyan-400 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors">
                     <i data-lucide="camera" class="w-4 h-4"></i> Lampirkan Foto (Opsional)
                 </button>
                 <p id="alert-photo-name" class="text-[10px] text-cyan-500 text-center font-mono mt-1"></p>
-
                 <button onclick="submitAlert()" id="btn-submit-alert" class="w-full bg-rose-600 hover:bg-rose-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(244,63,94,0.4)] transition-colors mt-2">
                     <i data-lucide="send" class="w-4 h-4"></i> KIRIM LAPORAN
                 </button>
@@ -345,7 +361,6 @@
 
     <!-- VIEW 3: ROLE MANAGEMENT (COMMAND CENTER) -->
     <section id="view-management" class="view-section flex-col min-h-screen">
-        <!-- Top Navbar -->
         <nav class="glass-panel sticky top-0 z-40 border-b border-slate-800 px-6 py-3">
             <div class="flex justify-between items-center max-w-7xl mx-auto w-full">
                 <div class="flex items-center gap-4">
@@ -358,10 +373,6 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-6">
-                    <div class="hidden md:flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span class="text-xs font-mono text-slate-300">System Normal</span>
-                    </div>
                     <div class="flex items-center gap-3 border-l border-slate-700 pl-6">
                         <div class="text-right hidden sm:block">
                             <p class="text-sm font-bold text-white uppercase" id="admin-header-name">ADMIN</p>
@@ -376,7 +387,6 @@
         </nav>
 
         <main class="flex-grow max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6">
-            <!-- Global Stats -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div class="glass-panel p-5 rounded-xl border-t-2 border-t-cyan-500 relative overflow-hidden group">
                     <i data-lucide="users" class="absolute -right-2 -bottom-2 w-16 h-16 text-cyan-500/10 group-hover:scale-110 transition-transform"></i>
@@ -414,16 +424,16 @@
                             </button>
                         </div>
                         
-                        <!-- Filter Bar -->
+                        <!-- FILTER BAR (Sudah dipasang event oninput & onchange) -->
                         <div class="flex flex-col sm:flex-row gap-2">
                             <div class="relative flex-grow">
                                 <i data-lucide="search" class="absolute left-2.5 top-2 w-4 h-4 text-slate-500"></i>
-                                <input type="text" id="filter-nama" placeholder="Cari Petugas..." class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white outline-none focus:border-cyan-500 transition-colors">
+                                <input type="text" id="filter-nama" oninput="filterTableAdmin()" placeholder="Cari Petugas..." class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white outline-none focus:border-cyan-500 transition-colors">
                             </div>
-                            <select id="filter-lokasi" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300 outline-none focus:border-cyan-500 transition-colors cursor-pointer w-full sm:w-auto">
+                            <select id="filter-lokasi" onchange="filterTableAdmin()" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300 outline-none focus:border-cyan-500 transition-colors cursor-pointer w-full sm:w-auto">
                                 <option value="">Semua Lokasi</option>
                             </select>
-                            <input type="date" id="filter-tanggal" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300 outline-none focus:border-cyan-500 transition-colors cursor-pointer w-full sm:w-auto">
+                            <input type="date" id="filter-tanggal" onchange="filterTableAdmin()" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300 outline-none focus:border-cyan-500 transition-colors cursor-pointer w-full sm:w-auto">
                         </div>
                     </div>
                     
@@ -438,7 +448,7 @@
                                 </tr>
                             </thead>
                             <tbody class="text-sm text-slate-300 font-medium divide-y divide-slate-800" id="patrol-log-body">
-                                <tr>
+                                <tr class="empty-row">
                                     <td colspan="4" class="p-8 text-center text-slate-500 italic text-xs">Menunggu tarikan data dari server... (Klik Refresh)</td>
                                 </tr>
                             </tbody>
@@ -476,7 +486,6 @@
     <script>
         lucide.createIcons();
 
-        // PENTING: URL Real dari Google Apps Script
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx5RgaE4_TT7L9g1KMyXtkDX7r_AaP-i5n_lhEA_FLO4qGZ78ad6yp5_uNlsK8UcQ6DoQ/exec"; 
         
         let currentUser = null;
@@ -484,6 +493,7 @@
         let currentStream = null;
         let scannedLocationId = null;
         let currentFacingMode = "user"; 
+        let scheduleInterval = null;
 
         // DOM Elements
         const viewLogin = document.getElementById('view-login');
@@ -493,7 +503,7 @@
         const loaderText = document.getElementById('loader-text');
         const toastContainer = document.getElementById('toast-container');
         
-        // --- Custom Toast Notification ---
+        // --- STREAMING_CHUNK:Initialization and UI Helpers... ---
         function showToast(message, type = 'info') {
             const toast = document.createElement('div');
             let bgColor = 'bg-slate-800 border-slate-700 text-white';
@@ -533,7 +543,7 @@
             }, 600); 
         }
 
-        // --- STREAMING_CHUNK:Login Event Listener... ---
+        // --- STREAMING_CHUNK:Auth Login... ---
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('login-id').value;
@@ -562,6 +572,9 @@
                         document.getElementById('sec-avatar').src = `https://ui-avatars.com/api/?name=${currentUser.nama}&background=1e293b&color=22d3ee`;
                         loaderText.innerText = 'MEMUAT DASHBOARD PATROLI...';
                         switchView(viewSecurity);
+                        
+                        // Mulai Engine Alarm Jadwal
+                        startScheduleChecker();
                     }
                 } else {
                     showToast(result.message, "error");
@@ -575,12 +588,101 @@
 
         function logout() {
             currentUser = null;
+            if(scheduleInterval) clearInterval(scheduleInterval);
             document.getElementById('login-form').reset();
             loaderText.innerText = 'MEMUTUSKAN KONEKSI...';
             switchView(viewLogin);
         }
 
-        // --- STREAMING_CHUNK:Scanner Control and Flow... ---
+        // --- STREAMING_CHUNK:Schedule and Alarm Engine (Security Role)... ---
+        // Dummy Data Jadwal (Nantinya diganti dari Backend)
+        let patrolSchedules = [
+            { jam: "18:00", instruksi: "Patroli Semua Titik" },
+            { jam: "19:00", instruksi: "Patroli Semua Titik" },
+            { jam: "20:00", instruksi: "Patroli Semua Titik" },
+            { jam: "21:00", instruksi: "Cek Area Belakang Extra" },
+            { jam: "22:00", instruksi: "Patroli Semua Titik" }
+        ];
+        let lastAlarmTriggered = "";
+
+        function startScheduleChecker() {
+            renderNextSchedule();
+            // Cek setiap 30 detik
+            scheduleInterval = setInterval(() => {
+                checkAlarmCondition();
+                renderNextSchedule();
+            }, 30000); 
+        }
+
+        function renderNextSchedule() {
+            if (!patrolSchedules || patrolSchedules.length === 0) return;
+            
+            const now = new Date();
+            let nextSchedule = null;
+
+            for (let i = 0; i < patrolSchedules.length; i++) {
+                let s = patrolSchedules[i];
+                let parts = s.jam.split(":");
+                let schedTime = new Date();
+                schedTime.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
+
+                if (schedTime > now) {
+                    nextSchedule = s;
+                    break;
+                }
+            }
+            
+            if (nextSchedule) {
+                document.getElementById('next-patrol-time').innerText = nextSchedule.jam;
+                document.getElementById('next-patrol-desc').innerText = nextSchedule.instruksi;
+            } else {
+                document.getElementById('next-patrol-time').innerText = "--:--";
+                document.getElementById('next-patrol-desc').innerText = "Semua jadwal hari ini selesai.";
+            }
+        }
+
+        function checkAlarmCondition() {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMin = now.getMinutes();
+            const timeString = `${currentHour.toString().padStart(2, '0')}:${currentMin.toString().padStart(2, '0')}`;
+
+            patrolSchedules.forEach(s => {
+                let parts = s.jam.split(":");
+                let schedTime = new Date();
+                schedTime.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
+                
+                // Hitung selisih waktu dalam menit
+                let diffMs = schedTime - now;
+                let diffMins = Math.floor(diffMs / 60000);
+
+                // Jika jadwal kurang dari atau sama dengan 5 menit lagi, DAN belum pernah trigger alarm ini
+                if (diffMins >= 0 && diffMins <= 5 && lastAlarmTriggered !== s.jam) {
+                    triggerAlarmModal(s.jam, s.instruksi);
+                    lastAlarmTriggered = s.jam; // Tandai agar tidak bunyi berkali-kali di menit yang sama
+                }
+            });
+        }
+
+        function triggerAlarmModal(time, desc) {
+            document.getElementById('alarm-time').innerText = time;
+            document.getElementById('alarm-desc').innerText = desc;
+            const modal = document.getElementById('modal-alarm');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            
+            // Opsional: Coba bunyikan vibrate jika browser mendukung
+            if(navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 500]);
+        }
+
+        function closeAlarm() {
+            const modal = document.getElementById('modal-alarm');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // --- STREAMING_CHUNK:Camera and QR Scanner Control... ---
         const modalScanner = document.getElementById('modal-scanner');
         const scanProcess = document.getElementById('scan-processing');
         const processText = document.getElementById('process-text');
@@ -593,13 +695,10 @@
         const topBarSpacer = document.getElementById('top-bar-spacer');
 
         function openScanner() {
-            showToast("Meminta izin akses kamera...", "info");
-
-            // Setup Tampilan ke mode Scanner QR
             qrContainer.classList.remove('hidden');
             selfieVideo.classList.add('hidden');
-            btnTakeSelfie.classList.add('hidden'); // Sembunyikan tombol kirim
-            qrInfoText.classList.remove('hidden'); // Munculkan instruksi QR
+            btnTakeSelfie.classList.add('hidden'); 
+            qrInfoText.classList.remove('opacity-0', 'translate-y-4'); // Tampilkan info QR
             scanProcess.classList.add('hidden');
             btnSwitchCam.classList.add('hidden');
             topBarSpacer.classList.remove('hidden');
@@ -613,52 +712,47 @@
                 qrScanner = new Html5Qrcode("qr-reader");
             }
             
-            // Optimasi Scanner FPS dan Format
+            // Format disempurnakan biar ringan
             qrScanner.start(
-                { facingMode: "environment" }, // Kamera belakang
+                { facingMode: "environment" }, 
                 { 
-                    fps: 15, // Ditingkatkan agar lebih responsif tapi tidak lag
+                    fps: 15, 
                     qrbox: { width: 250, height: 250 },
                     formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] 
                 },
                 (decodedText) => {
                     scannedLocationId = decodedText;
-                    showToast("Lokasi terdeteksi! Menyiapkan kamera depan...", "success");
+                    showToast("Lokasi terdeteksi! Menyiapkan kamera selfie...", "success");
                     
                     qrScanner.stop().then(() => {
-                        setTimeout(startSelfieCamera, 300); // Transisi lebih cepat
+                        setTimeout(startSelfieCamera, 200); 
                     }).catch(err => console.log(err));
                 },
-                (err) => { /* Abaikan error per frame agar console tidak penuh */ }
-            ).then(() => {
-                showToast("Kamera aktif. Silakan scan titik patroli.", "success");
-            }).catch(err => {
+                (err) => { /* Abaikan log per frame */ }
+            ).catch(err => {
                 showToast("Kamera diblokir/tidak tersedia.", "error");
                 closeScanner();
             });
         }
 
-        // --- STREAMING_CHUNK:Selfie Camera Operations... ---
         function startSelfieCamera() {
-            // Sembunyikan QR dan Tampilkan Video Selfie
             qrContainer.classList.add('hidden');
             selfieVideo.classList.remove('hidden');
             
-            // Sembunyikan Instruksi QR, Munculkan Tombol Selfie Melayang
-            qrInfoText.classList.add('hidden');
-            btnTakeSelfie.classList.remove('hidden');
+            // Sembunyikan Teks QR dengan animasi, munculkan Tombol
+            qrInfoText.classList.add('opacity-0', 'translate-y-4');
+            setTimeout(() => {
+                btnTakeSelfie.classList.remove('hidden');
+            }, 200);
             
-            // Munculkan opsi switch kamera
             btnSwitchCam.classList.remove('hidden');
             topBarSpacer.classList.add('hidden');
-            
             scannerTitle.innerText = "Tahap 2: VERIFIKASI WAJAH";
 
             if(currentStream) {
                 currentStream.getTracks().forEach(track => track.stop());
             }
 
-            // Meminta stream dari kamera HP
             navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: currentFacingMode } 
             })
@@ -688,7 +782,6 @@
             setTimeout(() => modalScanner.classList.add('hidden'), 300);
         }
 
-        // --- STREAMING_CHUNK:Submitting Patrol Data... ---
         async function takeSelfieAndSubmit() {
             const canvas = document.getElementById('selfie-canvas');
             canvas.width = selfieVideo.videoWidth || 480;
@@ -698,7 +791,7 @@
             const base64Image = canvas.toDataURL('image/jpeg', 0.6); 
             if(currentStream) currentStream.getTracks().forEach(track => track.stop());
             
-            processText.innerText = 'Mengirim Laporan Patroli...';
+            processText.innerText = 'Mengirim Laporan...';
             scanProcess.classList.remove('hidden');
 
             try {
@@ -716,7 +809,7 @@
                 if(result.status === 'success') {
                     showToast("Patroli titik berhasil disimpan!", "success");
                 } else {
-                    showToast("Gagal menyimpan: " + result.message, "error");
+                    showToast("Gagal menyimpan data.", "error");
                 }
             } catch(e) {
                 showToast("Error jaringan saat mengirim data.", "error");
@@ -724,7 +817,8 @@
             closeScanner();
         }
 
-        // --- STREAMING_CHUNK:Incident Alert Functions... ---
+        // --- STREAMING_CHUNK:Alert Incident... ---
+        // (Sama seperti versi sebelumnya, tidak ada perubahan logika alert di turn ini)
         let selectedUrgency = 'RENDAH';
         const modalAlert = document.getElementById('modal-alert');
         const alertContent = document.getElementById('alert-modal-content');
@@ -743,10 +837,7 @@
 
         function openAlertModal() {
             modalAlert.classList.remove('hidden');
-            setTimeout(() => {
-                modalAlert.classList.remove('opacity-0');
-                alertContent.classList.remove('translate-y-10');
-            }, 10);
+            setTimeout(() => { modalAlert.classList.remove('opacity-0'); alertContent.classList.remove('translate-y-10'); }, 10);
         }
 
         function closeAlertModal() {
@@ -761,11 +852,7 @@
         async function submitAlert() {
             const desc = document.getElementById('alert-desc').value;
             const photoInput = document.getElementById('alert-photo');
-            
-            if(!desc) { 
-                showToast("Deskripsi kejadian harus diisi!", "error"); 
-                return; 
-            }
+            if(!desc) { showToast("Deskripsi kejadian harus diisi!", "error"); return; }
 
             btnSubmitAlert.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> MENGIRIM...';
             btnSubmitAlert.disabled = true;
@@ -775,34 +862,17 @@
                 const file = photoInput.files[0];
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                await new Promise(resolve => {
-                    reader.onload = () => {
-                        base64Photo = reader.result.split(',')[1];
-                        resolve();
-                    }
-                });
+                await new Promise(resolve => { reader.onload = () => { base64Photo = reader.result.split(',')[1]; resolve(); }});
             }
 
             try {
-                const payload = {
-                    action: 'insiden',
-                    id_personel: currentUser ? currentUser.id : "USER",
-                    nama: currentUser ? currentUser.nama : "PETUGAS",
-                    urgensi: selectedUrgency,
-                    deskripsi: desc,
-                    foto_base64: base64Photo
-                };
+                const payload = { action: 'insiden', id_personel: currentUser ? currentUser.id : "USER", nama: currentUser ? currentUser.nama : "PETUGAS", urgensi: selectedUrgency, deskripsi: desc, foto_base64: base64Photo };
                 const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await res.json();
                 
-                if(result.status === 'success') {
-                    showToast("Laporan Insiden Berhasil Terkirim!", "success");
-                } else {
-                    showToast("Gagal: " + result.message, "error");
-                }
-            } catch(e) {
-                showToast("Error jaringan saat mengirim laporan.", "error");
-            }
+                if(result.status === 'success') showToast("Laporan Insiden Berhasil Terkirim!", "success");
+                else showToast("Gagal mengirim laporan.", "error");
+            } catch(e) { showToast("Error jaringan saat mengirim laporan.", "error"); }
             
             btnSubmitAlert.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> KIRIM LAPORAN';
             btnSubmitAlert.disabled = false;
@@ -810,7 +880,59 @@
             closeAlertModal();
         }
 
-        // --- STREAMING_CHUNK:Admin Dashboard Data Fetcher... ---
+        // --- STREAMING_CHUNK:Admin Dashboard & Filter Engine... ---
+        // Fungsi Pinter buat Filter Tabel Admin secara Live
+        function filterTableAdmin() {
+            const searchName = document.getElementById('filter-nama').value.toLowerCase();
+            const searchLoc = document.getElementById('filter-lokasi').value.toLowerCase();
+            const searchDateRaw = document.getElementById('filter-tanggal').value; // Format dari input HTML: YYYY-MM-DD
+            
+            // Konversi ke format tampilan (asumsi Backend akan ngirim DD/MM/YYYY)
+            let searchDateFormatted = "";
+            if (searchDateRaw) {
+                const parts = searchDateRaw.split('-');
+                searchDateFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`; 
+            }
+
+            const tbody = document.getElementById('patrol-log-body');
+            const rows = tbody.querySelectorAll('tr:not(.empty-row)');
+            
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                // Ambil teks dari setiap sel (Waktu, Nama, Lokasi)
+                const textWaktu = row.cells[0].innerText.toLowerCase();
+                const textNama = row.cells[1].innerText.toLowerCase();
+                const textLokasi = row.cells[2].innerText.toLowerCase();
+
+                // Cek kecocokan
+                const matchName = textNama.includes(searchName);
+                const matchLoc = searchLoc === "" || textLokasi.includes(searchLoc);
+                const matchDate = searchDateFormatted === "" || textWaktu.includes(searchDateFormatted);
+
+                if (matchName && matchLoc && matchDate) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Tampilkan pesan kosong jika tidak ada yang cocok
+            let emptyMsgRow = tbody.querySelector('.filter-empty-msg');
+            if (visibleCount === 0 && rows.length > 0) {
+                if (!emptyMsgRow) {
+                    emptyMsgRow = document.createElement('tr');
+                    emptyMsgRow.className = 'filter-empty-msg';
+                    emptyMsgRow.innerHTML = `<td colspan="4" class="p-8 text-center text-slate-500 italic text-xs">Pencarian tidak menemukan hasil.</td>`;
+                    tbody.appendChild(emptyMsgRow);
+                }
+            } else if (emptyMsgRow) {
+                emptyMsgRow.remove();
+            }
+        }
+
+        // Fungsi Tarik Data dari Backend
         async function fetchAdminData() {
             showToast("Menarik data terbaru dari server...", "info");
             
@@ -839,7 +961,7 @@
                     tbody.innerHTML = ''; 
                     
                     if (data.logs.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-500 italic text-xs">Belum ada data patroli.</td></tr>';
+                        tbody.innerHTML = '<tr class="empty-row"><td colspan="4" class="p-8 text-center text-slate-500 italic text-xs">Belum ada data patroli.</td></tr>';
                     } else {
                         data.logs.forEach(log => {
                             let linkBukti = (log.bukti && log.bukti !== "-") 
@@ -856,6 +978,9 @@
                             `;
                         });
                     }
+                    
+                    // Panggil filter lagi setelah data baru masuk
+                    filterTableAdmin();
                     showToast("Dashboard berhasil diperbarui!", "success");
                 } else {
                     showToast("Gagal menarik data.", "error");

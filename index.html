@@ -86,9 +86,7 @@
         #qr-reader__scan_region {
             width: 100% !important;
             height: 100% !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: block !important;
             background: #000 !important;
         }
         #qr-reader__scan_region video {
@@ -131,7 +129,7 @@
         .toast-enter { animation: slideInUp 0.3s ease-out forwards; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+<body class="min-h-screen flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
 
     <!-- GLOBAL LOADER -->
     <div id="global-loader" class="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-md transition-opacity duration-300 opacity-0 pointer-events-none">
@@ -223,7 +221,6 @@
                 <div class="flex items-end justify-between mt-2 relative z-10">
                     <div>
                         <span class="text-2xl font-black text-white">PATROLI AKTIF</span>
-                        <!-- Nanti fitur schedule patroli bisa dimasukin di sekitar sini bro -->
                         <p class="text-sm font-medium text-amber-400 mt-1">Pastikan keliling sesuai rute</p>
                     </div>
                 </div>
@@ -251,24 +248,10 @@
     </section>
 
     <!-- UI SCANNER MODAL (QR & SELFIE) -->
-    <div id="modal-scanner" class="fixed inset-0 z-50 bg-black hidden flex-col transition-opacity duration-300 opacity-0">
-        <!-- Top bar -->
-        <div class="p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent absolute top-0 w-full z-20">
-            <button onclick="closeScanner()" class="p-2 text-white bg-slate-800/50 rounded-full backdrop-blur">
-                <i data-lucide="x" class="w-6 h-6"></i>
-            </button>
-            <span class="font-mono text-cyan-400 text-sm font-bold bg-black/50 px-3 py-1 rounded" id="scanner-title">Tahap 1: SCAN QR</span>
-            
-            <!-- Tombol Switch Camera (Muncul di tahap Selfie) -->
-            <button id="btn-switch-cam" onclick="toggleCamera()" class="p-2 text-cyan-400 bg-slate-800/80 rounded-full backdrop-blur shadow-lg hidden border border-cyan-500/30">
-                <i data-lucide="refresh-ccw" class="w-6 h-6"></i>
-            </button>
-            <!-- Spacer kalau switch cam disembunyikan biar judul tetep di tengah -->
-            <div id="top-bar-spacer" class="w-10"></div> 
-        </div>
-
-        <!-- Camera Area -->
-        <div class="flex-grow relative bg-slate-900 w-full h-full overflow-hidden">
+    <div id="modal-scanner" class="fixed inset-0 z-[100] bg-black hidden flex-col transition-opacity duration-300 opacity-0 overflow-hidden">
+        
+        <!-- Fullscreen Camera Area -->
+        <div class="absolute inset-0 w-full h-full bg-slate-950">
             
             <!-- AREA 1: QR READER -->
             <div id="qr-container" class="absolute inset-0 w-full h-full">
@@ -278,29 +261,49 @@
                 <!-- Target Box Overlay (Garis Biru Kotak & Radar Naik Turun) -->
                 <div class="scanner-frame" id="qr-frame-overlay">
                     <span></span>
+                    <!-- Radar scan line -->
                     <div id="laser-line" class="absolute top-0 left-0 w-full h-[2px] bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,1)] animate-scan-line"></div>
                 </div>
             </div>
 
             <!-- AREA 2: SELFIE VIDEO PREVIEW (Realtime Camera) -->
+            <!-- Atribut playsinline autoplay muted penting agar layar tidak hitam di Mobile -->
             <video id="selfie-video" class="absolute inset-0 w-full h-full object-cover hidden z-10" autoplay playsinline muted></video>
             <canvas id="selfie-canvas" class="hidden"></canvas>
             
             <!-- Loading overlay during process -->
-            <div id="scan-processing" class="absolute inset-0 bg-black/80 z-20 hidden flex-col items-center justify-center backdrop-blur-sm">
+            <div id="scan-processing" class="absolute inset-0 bg-black/80 z-40 hidden flex-col items-center justify-center backdrop-blur-sm">
                 <i data-lucide="loader-2" class="w-12 h-12 text-cyan-400 animate-spin mb-4"></i>
                 <p class="text-white font-mono text-sm" id="process-text">Memverifikasi...</p>
             </div>
         </div>
 
-        <!-- Bottom Action Bar -->
-        <div class="bg-slate-950 p-6 pb-10 rounded-t-3xl border-t border-slate-800 relative z-20 text-center shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-            <i data-lucide="qr-code" id="step-icon" class="w-8 h-8 text-cyan-500 mx-auto mb-3"></i>
-            <h3 id="step-desc" class="text-lg font-bold text-white mb-1">Arahkan kamera ke QR Code</h3>
-            <p class="text-xs text-slate-400 mb-6" id="step-sub-desc">Sistem akan otomatis membaca kode QR.</p>
+        <!-- Top bar (Mengambang di atas video) -->
+        <div class="absolute top-0 left-0 w-full p-4 flex justify-between items-center bg-gradient-to-b from-black/90 to-transparent z-30">
+            <button onclick="closeScanner()" class="p-2 text-white bg-slate-800/50 rounded-full backdrop-blur">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <span class="font-mono text-cyan-400 text-sm font-bold bg-black/50 px-3 py-1 rounded border border-cyan-500/30" id="scanner-title">Tahap 1: SCAN QR</span>
             
-            <!-- Tombol Selfie yang nyata -->
-            <button onclick="takeSelfieAndSubmit()" id="btn-take-selfie" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white py-4 rounded-xl font-bold shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-colors hidden flex items-center justify-center gap-2">
+            <!-- Tombol Switch Camera -->
+            <button id="btn-switch-cam" onclick="toggleCamera()" class="p-2 text-cyan-400 bg-slate-800/80 rounded-full backdrop-blur shadow-lg hidden border border-cyan-500/30">
+                <i data-lucide="refresh-ccw" class="w-6 h-6"></i>
+            </button>
+            <div id="top-bar-spacer" class="w-10"></div> 
+        </div>
+
+        <!-- Bottom Action Bar (Mengambang di bawah) -->
+        <div class="absolute bottom-0 left-0 w-full p-6 pb-12 bg-gradient-to-t from-black via-black/80 to-transparent z-30 flex flex-col items-center">
+            
+            <!-- Teks Panduan Scan QR -->
+            <div id="qr-info-text" class="text-center w-full transition-all duration-300">
+                <i data-lucide="qr-code" class="w-8 h-8 text-cyan-500 mx-auto mb-3 animate-pulse"></i>
+                <h3 class="text-lg font-bold text-white mb-1">Arahkan kamera ke QR Code</h3>
+                <p class="text-xs text-slate-300 drop-shadow-md">Sistem akan otomatis membaca kode QR.</p>
+            </div>
+            
+            <!-- Tombol Selfie Melayang (Awalnya disembunyikan) -->
+            <button onclick="takeSelfieAndSubmit()" id="btn-take-selfie" class="w-full max-w-sm bg-cyan-600 hover:bg-cyan-500 text-white py-4 rounded-xl font-bold shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all hidden flex items-center justify-center gap-2 transform hover:scale-105 active:scale-95">
                 <i data-lucide="camera" class="w-5 h-5"></i> AMBIL SELFIE & KIRIM
             </button>
         </div>
@@ -480,7 +483,7 @@
         let qrScanner = null;
         let currentStream = null;
         let scannedLocationId = null;
-        let currentFacingMode = "user"; // Default kamera depan buat selfie
+        let currentFacingMode = "user"; 
 
         // DOM Elements
         const viewLogin = document.getElementById('view-login');
@@ -530,7 +533,7 @@
             }, 600); 
         }
 
-        // --- STREAMING_CHUNK:Login Logic... ---
+        // --- STREAMING_CHUNK:Login Event Listener... ---
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('login-id').value;
@@ -577,7 +580,7 @@
             switchView(viewLogin);
         }
 
-        // --- STREAMING_CHUNK:Scanner and Camera Control... ---
+        // --- STREAMING_CHUNK:Scanner Control and Flow... ---
         const modalScanner = document.getElementById('modal-scanner');
         const scanProcess = document.getElementById('scan-processing');
         const processText = document.getElementById('process-text');
@@ -585,28 +588,23 @@
         const qrContainer = document.getElementById('qr-container');
         const selfieVideo = document.getElementById('selfie-video');
         const scannerTitle = document.getElementById('scanner-title');
-        const stepIcon = document.getElementById('step-icon');
-        const stepDesc = document.getElementById('step-desc');
-        const stepSubDesc = document.getElementById('step-sub-desc');
+        const qrInfoText = document.getElementById('qr-info-text');
         const btnSwitchCam = document.getElementById('btn-switch-cam');
         const topBarSpacer = document.getElementById('top-bar-spacer');
 
         function openScanner() {
             showToast("Meminta izin akses kamera...", "info");
 
-            // Reset tampilan ke mode Scanner QR
+            // Setup Tampilan ke mode Scanner QR
             qrContainer.classList.remove('hidden');
             selfieVideo.classList.add('hidden');
-            btnTakeSelfie.classList.add('hidden');
+            btnTakeSelfie.classList.add('hidden'); // Sembunyikan tombol kirim
+            qrInfoText.classList.remove('hidden'); // Munculkan instruksi QR
             scanProcess.classList.add('hidden');
             btnSwitchCam.classList.add('hidden');
             topBarSpacer.classList.remove('hidden');
             
             scannerTitle.innerText = "Tahap 1: SCAN QR";
-            stepIcon.setAttribute('data-lucide', 'qr-code');
-            stepDesc.innerText = 'Arahkan kamera ke QR Code';
-            stepSubDesc.innerText = 'Sistem akan otomatis membaca kode.';
-            lucide.createIcons();
             
             modalScanner.classList.remove('hidden');
             setTimeout(() => modalScanner.classList.remove('opacity-0'), 10);
@@ -615,23 +613,23 @@
                 qrScanner = new Html5Qrcode("qr-reader");
             }
             
-            // Konfigurasi optimasi Scanner
+            // Optimasi Scanner FPS dan Format
             qrScanner.start(
                 { facingMode: "environment" }, // Kamera belakang
                 { 
-                    fps: 15, 
+                    fps: 15, // Ditingkatkan agar lebih responsif tapi tidak lag
                     qrbox: { width: 250, height: 250 },
                     formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] 
                 },
                 (decodedText) => {
                     scannedLocationId = decodedText;
-                    showToast("Lokasi terdeteksi! Menyiapkan kamera selfie...", "success");
+                    showToast("Lokasi terdeteksi! Menyiapkan kamera depan...", "success");
                     
                     qrScanner.stop().then(() => {
-                        setTimeout(startSelfieCamera, 500); 
+                        setTimeout(startSelfieCamera, 300); // Transisi lebih cepat
                     }).catch(err => console.log(err));
                 },
-                (err) => { /* Ignore read errors to prevent console spam */ }
+                (err) => { /* Abaikan error per frame agar console tidak penuh */ }
             ).then(() => {
                 showToast("Kamera aktif. Silakan scan titik patroli.", "success");
             }).catch(err => {
@@ -640,33 +638,33 @@
             });
         }
 
-        // --- STREAMING_CHUNK:Selfie Camera Engine... ---
+        // --- STREAMING_CHUNK:Selfie Camera Operations... ---
         function startSelfieCamera() {
-            // Sembunyikan pembaca QR dan Tampilkan Video Preview
+            // Sembunyikan QR dan Tampilkan Video Selfie
             qrContainer.classList.add('hidden');
             selfieVideo.classList.remove('hidden');
+            
+            // Sembunyikan Instruksi QR, Munculkan Tombol Selfie Melayang
+            qrInfoText.classList.add('hidden');
             btnTakeSelfie.classList.remove('hidden');
+            
+            // Munculkan opsi switch kamera
             btnSwitchCam.classList.remove('hidden');
             topBarSpacer.classList.add('hidden');
             
             scannerTitle.innerText = "Tahap 2: VERIFIKASI WAJAH";
-            stepIcon.setAttribute('data-lucide', 'user-focus');
-            stepDesc.innerText = 'Lokasi Terbaca!';
-            stepSubDesc.innerText = `Area: ${scannedLocationId}`;
-            lucide.createIcons();
 
             if(currentStream) {
                 currentStream.getTracks().forEach(track => track.stop());
             }
 
-            // Meminta stream dari kamera browser (default: depan)
+            // Meminta stream dari kamera HP
             navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: currentFacingMode } 
             })
             .then(stream => {
                 currentStream = stream;
                 selfieVideo.srcObject = stream;
-                // Paksa pemutaran video
                 selfieVideo.play().catch(e => console.error("Auto-play prevented", e));
             })
             .catch(err => {
@@ -690,7 +688,7 @@
             setTimeout(() => modalScanner.classList.add('hidden'), 300);
         }
 
-        // --- STREAMING_CHUNK:Patrol Data Submission... ---
+        // --- STREAMING_CHUNK:Submitting Patrol Data... ---
         async function takeSelfieAndSubmit() {
             const canvas = document.getElementById('selfie-canvas');
             canvas.width = selfieVideo.videoWidth || 480;
@@ -726,7 +724,7 @@
             closeScanner();
         }
 
-        // --- STREAMING_CHUNK:Incident Alert Module... ---
+        // --- STREAMING_CHUNK:Incident Alert Functions... ---
         let selectedUrgency = 'RENDAH';
         const modalAlert = document.getElementById('modal-alert');
         const alertContent = document.getElementById('alert-modal-content');

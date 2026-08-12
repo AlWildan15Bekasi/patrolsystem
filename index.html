@@ -10,13 +10,13 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- HTML5 QR Code Scanner -->
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     
     <!-- Flatpickr (Custom Datepicker) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/themes/dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/l10n/id.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -273,7 +273,7 @@
             <!-- AREA 1: QR READER -->
             <div id="qr-container" class="absolute inset-0 w-full h-full z-10">
                 <div id="qr-reader" class="w-full h-full"></div>
-                <!-- Garis Biru Kotak Scanner -->
+                <!-- Garis Biru Kotak Scanner (Presisi di tengah) -->
                 <div class="scanner-frame" id="qr-frame-overlay">
                     <span></span>
                 </div>
@@ -293,12 +293,12 @@
 
         <!-- Top bar (Mengambang di atas kamera) -->
         <div class="absolute top-0 left-0 w-full p-4 flex justify-between items-center bg-gradient-to-b from-black/90 to-transparent z-40">
-            <button onclick="closeScanner()" class="p-2 text-white bg-slate-800/80 rounded-full backdrop-blur border border-slate-700">
+            <button onclick="closeScanner()" class="p-2 text-white bg-slate-800/80 rounded-full backdrop-blur border border-slate-700 shadow-lg">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
             <span class="font-mono text-cyan-400 text-sm font-bold bg-black/60 px-4 py-1.5 rounded-full border border-cyan-500/30 shadow-[0_0_10px_rgba(34,211,238,0.2)]" id="scanner-title">Tahap 1: SCAN QR</span>
             
-            <!-- Tombol Switch Camera -->
+            <!-- Tombol Switch Camera (Putar Kamera) -->
             <button id="btn-switch-cam" onclick="toggleCamera()" class="p-2 text-cyan-400 bg-slate-800/80 rounded-full backdrop-blur shadow-[0_0_15px_rgba(34,211,238,0.3)] hidden border border-cyan-500/50">
                 <i data-lucide="refresh-ccw" class="w-6 h-6"></i>
             </button>
@@ -429,9 +429,9 @@
                                 <option value="">Semua Lokasi</option>
                             </select>
                             
-                            <!-- FLATPICKR DATE INPUT (REVISED) -->
+                            <!-- FLATPICKR DATE INPUT -->
                             <div class="relative w-full sm:w-auto">
-                                <i data-lucide="calendar" class="absolute left-2.5 top-2 w-3.5 h-3.5 text-cyan-500"></i>
+                                <i data-lucide="calendar" class="absolute left-2.5 top-2 w-3.5 h-3.5 text-cyan-500 pointer-events-none"></i>
                                 <input type="text" id="filter-tanggal" onchange="filterTableAdmin()" placeholder="Pilih Tanggal..." class="w-full sm:w-36 bg-slate-950 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-300 outline-none focus:border-cyan-500 transition-colors cursor-pointer">
                             </div>
                         </div>
@@ -449,7 +449,7 @@
                             </thead>
                             <tbody class="text-sm text-slate-300 font-medium divide-y divide-slate-800" id="patrol-log-body">
                                 <tr class="empty-row">
-                                    <td colspan="4" class="p-8 text-center text-slate-500 italic text-xs">Menunggu penarikan data dari server... (Klik Refresh)</td>
+                                    <td colspan="4" class="p-8 text-center text-slate-500 italic text-xs">Menunggu penarikan data dari server...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -481,7 +481,7 @@
                 </div>
             </div>
             
-            <!-- TABEL LAPORAN INSIDEN (BARU - OPSI 1) -->
+            <!-- TABEL LAPORAN INSIDEN (BARU - TERPISAH) -->
             <div class="glass-panel rounded-xl border border-rose-500/30 flex flex-col mt-6 overflow-hidden">
                 <div class="p-4 border-b border-rose-500/20 bg-rose-500/10 flex justify-between items-center">
                     <h2 class="font-bold text-rose-500 flex items-center gap-2 tracking-wider">
@@ -499,16 +499,10 @@
                                 <th class="p-4 font-bold text-center">Aksi</th>
                             </tr>
                         </thead>
+                        <!-- ID KOSONG TUNGGU DATA DARI SERVER -->
                         <tbody class="text-sm text-slate-300 font-medium divide-y divide-slate-800" id="incident-log-body">
-                            <!-- DUMMY DATA SEMENTARA (Sambil nunggu Backend) -->
-                            <tr class="hover:bg-slate-800/50 transition-colors">
-                                <td class="p-4 text-xs font-mono text-slate-400">12 Aug 2026 14:00</td>
-                                <td class="p-4"><span class="font-bold text-white text-sm">Dummy User</span></td>
-                                <td class="p-4"><span class="px-2 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded text-[10px] font-bold">TINGGI</span></td>
-                                <td class="p-4 text-xs text-slate-400 truncate max-w-[200px]">Ada orang mencurigakan di dekat gudang...</td>
-                                <td class="p-4 text-center">
-                                    <button onclick="openIncidentDetail('Dummy User', 'TINGGI', 'Ada orang mencurigakan di dekat gudang belakang mencoba membuka gembok.', '#')" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded text-[10px] font-bold transition-colors">BACA DETAIL</button>
-                                </td>
+                            <tr>
+                                <td colspan="5" class="p-8 text-center text-slate-500 italic text-xs">Menunggu penarikan data dari server...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -557,9 +551,9 @@
         // Inisialisasi ikon UI
         lucide.createIcons();
 
-        // Init Flatpickr (Kalender Custom)
+        // Init Flatpickr (Kalender Custom yang Elegan)
         flatpickr("#filter-tanggal", {
-            dateFormat: "d M Y", // Format: 12 Aug 2026
+            dateFormat: "d/m/Y", // Format cocok dengan format log hari ini
             locale: "id", // Bahasa Indonesia
             disableMobile: "true" // Paksakan UI Flatpickr di mobile agar konsisten
         });
@@ -570,7 +564,7 @@
         let qrScanner = null;
         let currentStream = null;
         let scannedLocationId = null;
-        let currentFacingMode = "environment"; // Default kamera belakang untuk scan QR
+        let currentFacingMode = "environment"; // Default kamera belakang
         let scheduleInterval = null;
 
         // DOM Elements
@@ -643,7 +637,8 @@
                         document.getElementById('admin-header-name').innerText = currentUser.nama;
                         loaderText.innerText = 'MEMUAT COMMAND CENTER...';
                         switchView(viewManagement);
-                        // fetchAdminData(); // (Ditunda, nunggu script backend baru)
+                        // JALANKAN TARIK DATA ADMIN!
+                        fetchAdminData(); 
                     } else {
                         document.getElementById('sec-name').innerText = currentUser.nama.toUpperCase();
                         document.getElementById('sec-id').innerText = `ID: ${currentUser.id || '-'} • Sedang Bertugas`;
@@ -740,7 +735,6 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
-        // --- STREAMING_CHUNK:QR Scanner and Selfie Camera Logic... ---
         // --- QR & SELFIE SCANNER ---
         const modalScanner = document.getElementById('modal-scanner');
         const scanProcess = document.getElementById('scan-processing');
@@ -754,7 +748,6 @@
         const topBarSpacer = document.getElementById('top-bar-spacer');
 
         function openScanner() {
-            // Setup awal: Tampilkan area QR, sembunyikan area Selfie
             qrContainer.classList.remove('hidden');
             selfieVideo.classList.add('hidden');
             btnTakeSelfie.classList.add('hidden'); 
@@ -764,7 +757,7 @@
             topBarSpacer.classList.remove('hidden');
             
             scannerTitle.innerText = "Tahap 1: SCAN QR";
-            currentFacingMode = "environment"; // Paksa pakai kamera belakang dulu untuk QR
+            currentFacingMode = "environment"; // Kamera belakang
             
             modalScanner.classList.remove('hidden');
             setTimeout(() => modalScanner.classList.remove('opacity-0'), 10);
@@ -779,7 +772,7 @@
                     showToast("Lokasi terdeteksi! Menyiapkan kamera selfie...", "success");
                     qrScanner.stop().then(() => { setTimeout(startSelfieCamera, 300); }).catch(e => console.log(e));
                 },
-                (err) => { /* Abaikan log error tiap frame */ }
+                (err) => { /* Abaikan log frame */ }
             ).catch(err => {
                 showToast("Kamera belakang diblokir atau tidak tersedia.", "error");
                 closeScanner();
@@ -787,10 +780,7 @@
         }
 
         function startSelfieCamera() {
-            // Sembunyikan QR Scanner murni via DOM
             qrContainer.classList.add('hidden');
-            
-            // Nyalakan video selfie dan pastikan posisinya di atas (z-index 20 via CSS)
             selfieVideo.classList.remove('hidden');
             
             qrInfoText.classList.add('opacity-0', 'translate-y-4');
@@ -800,10 +790,7 @@
             topBarSpacer.classList.add('hidden');
             scannerTitle.innerText = "Tahap 2: VERIFIKASI WAJAH";
 
-            // Matikan stream kamera lama (kalau masih ada) sebelum buka kamera depan
             if(currentStream) currentStream.getTracks().forEach(track => track.stop());
-
-            // Ganti default hadap kamera ke depan (user)
             currentFacingMode = "user";
 
             navigator.mediaDevices.getUserMedia({ 
@@ -811,18 +798,15 @@
             }).then(stream => {
                 currentStream = stream;
                 selfieVideo.srcObject = stream;
-                selfieVideo.play().catch(e => console.error("Auto-play prevented", e));
+                selfieVideo.play().catch(e => console.error(e));
             }).catch(err => {
                 showToast("Gagal mengakses kamera depan.", "error");
             });
         }
 
         function toggleCamera() {
-            // Logika tombol putar kamera (kalau user mau pakai kamera belakang buat selfie)
             currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
-            
             if(currentStream) currentStream.getTracks().forEach(track => track.stop());
-            
             navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: currentFacingMode } 
             }).then(stream => {
@@ -863,7 +847,6 @@
             closeScanner();
         }
 
-        // --- STREAMING_CHUNK:Incident Form and Admin Handlers... ---
         // --- INSIDEN FORM ---
         let selectedUrgency = 'RENDAH';
         const modalAlert = document.getElementById('modal-alert');
@@ -927,23 +910,112 @@
         }
 
         // --- DASHBOARD ADMIN LOGIC ---
+        
+        async function fetchAdminData() {
+            const tbodyPatrol = document.getElementById('patrol-log-body');
+            const tbodyInsiden = document.getElementById('incident-log-body');
+            
+            // Efek loading
+            tbodyPatrol.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-cyan-400 font-mono text-xs animate-pulse">Menarik data dari server...</td></tr>';
+            tbodyInsiden.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-rose-400 font-mono text-xs animate-pulse">Menarik data insiden...</td></tr>';
+            
+            try {
+                const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'get_dashboard' }) });
+                const result = await res.json();
+
+                if(result.status === 'success') {
+                    const data = result.data;
+
+                    // 1. Update KPI
+                    document.getElementById('stat-petugas').innerText = data.total_petugas;
+                    document.getElementById('stat-scan').innerText = data.scan_hari_ini;
+                    document.getElementById('stat-insiden').innerText = data.total_insiden;
+
+                    // 2. Isi Dropdown Filter Lokasi/Lantai
+                    const filterLokasi = document.getElementById('filter-lokasi');
+                    const currentVal = filterLokasi.value; 
+                    filterLokasi.innerHTML = '<option value="">Semua Lokasi</option>';
+                    data.lokasi.forEach(loc => {
+                        filterLokasi.innerHTML += `<option value="${loc}">${loc}</option>`;
+                    });
+                    filterLokasi.value = currentVal; 
+
+                    // 3. Render Tabel Patroli
+                    tbodyPatrol.innerHTML = '';
+                    if(data.logs.length === 0) {
+                        tbodyPatrol.innerHTML = '<tr class="empty-row"><td colspan="4" class="p-8 text-center text-slate-500 italic text-xs">Belum ada data patroli.</td></tr>';
+                    } else {
+                        data.logs.forEach(log => {
+                            let buktiHtml = (log.bukti && log.bukti !== "-" && log.bukti !== "Error Upload") 
+                                ? `<a href="${log.bukti}" target="_blank" class="px-3 py-1 bg-cyan-900/50 text-cyan-400 border border-cyan-500/30 rounded text-[10px] font-bold hover:bg-cyan-800 transition-colors">CEK FOTO</a>` 
+                                : `<span class="text-[10px] text-slate-600">-</span>`;
+                            
+                            tbodyPatrol.innerHTML += `
+                                <tr class="hover:bg-slate-800/50 transition-colors" data-area="${log.area}">
+                                    <td class="p-4 text-xs font-mono text-slate-400">${log.waktu}</td>
+                                    <td class="p-4"><span class="font-bold text-white text-sm">${log.nama}</span></td>
+                                    <td class="p-4">
+                                        <span class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs font-medium text-cyan-400">${log.lokasi_nama}</span>
+                                    </td>
+                                    <td class="p-4 text-center">${buktiHtml}</td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    // 4. Render Tabel Insiden Khusus
+                    tbodyInsiden.innerHTML = '';
+                    if(data.incidents.length === 0) {
+                        tbodyInsiden.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-emerald-500/50 italic text-xs">Tidak ada insiden tercatat. Kondusif!</td></tr>';
+                    } else {
+                        data.incidents.forEach(inc => {
+                            let badgeColor = inc.urgensi === 'TINGGI' ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' : 
+                                             (inc.urgensi === 'SEDANG' ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30');
+                            
+                            tbodyInsiden.innerHTML += `
+                                <tr class="hover:bg-slate-800/50 transition-colors">
+                                    <td class="p-4 text-xs font-mono text-slate-400">${inc.waktu}</td>
+                                    <td class="p-4"><span class="font-bold text-white text-sm">${inc.pelapor}</span></td>
+                                    <td class="p-4"><span class="px-2 py-1 ${badgeColor} border rounded text-[10px] font-bold">${inc.urgensi}</span></td>
+                                    <td class="p-4 text-xs text-slate-400 truncate max-w-[200px]">${inc.deskripsi}</td>
+                                    <td class="p-4 text-center">
+                                        <button onclick="openIncidentDetail('${inc.pelapor}', '${inc.urgensi}', \`${inc.deskripsi.replace(/"/g, '&quot;')}\`, '${inc.bukti}')" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded text-[10px] font-bold transition-colors shadow-lg">BACA DETAIL</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    }
+                    
+                    showToast("Dashboard berhasil diperbarui!", "success");
+                    filterTableAdmin(); // Jalankan filter ulang barangkali admin lagi nge-search
+
+                } else {
+                    showToast("Gagal menarik data.", "error");
+                    tbodyPatrol.innerHTML = '<tr class="empty-row"><td colspan="4" class="p-8 text-center text-rose-500 italic text-xs">Gagal memuat data.</td></tr>';
+                    tbodyInsiden.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-rose-500 italic text-xs">Gagal memuat data insiden.</td></tr>';
+                }
+            } catch(e) {
+                showToast("Koneksi Error.", "error");
+            }
+        }
+
+        // FUNGSI PENCARIAN & FILTER TABEL
         function filterTableAdmin() {
             const searchName = document.getElementById('filter-nama').value.toLowerCase();
-            const searchLoc = document.getElementById('filter-lokasi').value.toLowerCase();
-            const searchDate = document.getElementById('filter-tanggal').value; // Dari Flatpickr, misal: 12 Aug 2026
+            const searchLoc = document.getElementById('filter-lokasi').value.toLowerCase(); // Isinya "Lantai 1", dll
+            const searchDate = document.getElementById('filter-tanggal').value; // Format dari flatpickr dd/mm/yyyy
 
-            // Filter Tabel Log Patroli
             const tbodyPatrol = document.getElementById('patrol-log-body');
             const rowsPatrol = tbodyPatrol.querySelectorAll('tr:not(.empty-row):not(.filter-empty-msg)');
             let visibleCountPatrol = 0;
 
             rowsPatrol.forEach(row => {
-                const textWaktu = row.cells[0].innerText; // Waktu sengaja biarkan case-sensitive untuk cocokin tanggal
+                const textWaktu = row.cells[0].innerText; // Misal 12/08/2026 14:00
                 const textNama = row.cells[1].innerText.toLowerCase();
-                const textLokasi = row.cells[2].innerText.toLowerCase(); // Nanti ini isinya "Lantai 1" dari Backend
+                const textAreaRahasia = row.getAttribute('data-area') ? row.getAttribute('data-area').toLowerCase() : "";
 
                 const matchName = textNama.includes(searchName);
-                const matchLoc = searchLoc === "" || textLokasi.includes(searchLoc);
+                const matchLoc = searchLoc === "" || textAreaRahasia.includes(searchLoc);
                 const matchDate = searchDate === "" || textWaktu.includes(searchDate);
 
                 if (matchName && matchLoc && matchDate) {
@@ -954,7 +1026,7 @@
                 }
             });
 
-            // Handle pesan kosong tabel patroli
+            // Tampilkan pesan jika filter tidak nemu hasil
             let emptyMsgPatrol = tbodyPatrol.querySelector('.filter-empty-msg');
             if (visibleCountPatrol === 0 && rowsPatrol.length > 0) {
                 if (!emptyMsgPatrol) {
@@ -964,9 +1036,6 @@
                     tbodyPatrol.appendChild(emptyMsgPatrol);
                 }
             } else if (emptyMsgPatrol) { emptyMsgPatrol.remove(); }
-            
-            // Filter Tabel Insiden (kalau datanya sudah ada)
-            // Konsepnya sama, tapi sementara kita fokus logika utamanya dulu.
         }
 
         // --- MODAL DETAIL INSIDEN (ADMIN) ---
@@ -1000,11 +1069,6 @@
             const modal = document.getElementById('modal-incident-detail');
             modal.classList.add('opacity-0');
             setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-
-        async function fetchAdminData() {
-            // (Fungsi ini sengaja di-comment logikanya sambil nunggu kamu siap ganti backend.gs)
-            showToast("Tombol Refresh ditekan. Tapi mesin Backend-nya belum diupdate bro!", "info");
         }
     </script>
 </body>

@@ -279,8 +279,7 @@
                 </div>
             </div>
 
-            <!-- AREA 2: SELFIE VIDEO PREVIEW (Menimpa QR saat aktif) -->
-            <!-- Diberi z-index 20 agar muncul di atas QR saat tombol ditekan -->
+            <!-- AREA 2: SELFIE VIDEO PREVIEW -->
             <video id="selfie-video" class="absolute inset-0 w-full h-full object-cover z-20 hidden" autoplay playsinline muted></video>
             <canvas id="selfie-canvas" class="hidden"></canvas>
             
@@ -298,23 +297,23 @@
             </button>
             <span class="font-mono text-cyan-400 text-sm font-bold bg-black/60 px-4 py-1.5 rounded-full border border-cyan-500/30 shadow-[0_0_10px_rgba(34,211,238,0.2)]" id="scanner-title">Tahap 1: SCAN QR</span>
             
-            <!-- Tombol Switch Camera (Putar Kamera) -->
+            <!-- Tombol Switch Camera -->
             <button id="btn-switch-cam" onclick="toggleCamera()" class="p-2 text-cyan-400 bg-slate-800/80 rounded-full backdrop-blur shadow-[0_0_15px_rgba(34,211,238,0.3)] hidden border border-cyan-500/50">
                 <i data-lucide="refresh-ccw" class="w-6 h-6"></i>
             </button>
             <div id="top-bar-spacer" class="w-10"></div> 
         </div>
 
-        <!-- Teks Panduan QR (Floating bawah) -->
+        <!-- Teks Panduan QR -->
         <div id="qr-info-text" class="absolute bottom-12 left-0 w-full p-6 text-center z-30 pointer-events-none transition-all duration-300">
             <div class="inline-block bg-black/60 backdrop-blur-md border border-slate-700/50 rounded-2xl p-4 shadow-xl">
                 <i data-lucide="qr-code" class="w-8 h-8 text-cyan-500 mx-auto mb-2 animate-pulse"></i>
                 <h3 class="text-base font-bold text-white mb-1">Arahkan kamera ke QR</h3>
-                <p class="text-xs text-slate-300">Sistem akan otomatis membaca kode QR.</p>
+                <p class="text-xs text-slate-300">Sistem otomatis membaca kode QR.</p>
             </div>
         </div>
         
-        <!-- Tombol Selfie Melayang (Pasti Muncul Berkat Z-Index Tinggi) -->
+        <!-- Tombol Selfie Melayang -->
         <button onclick="takeSelfieAndSubmit()" id="btn-take-selfie" class="btn-floating w-full max-w-xs bg-cyan-600 hover:bg-cyan-500 text-white py-4 rounded-xl font-bold shadow-[0_0_30px_rgba(34,211,238,0.5)] transition-all hidden flex items-center justify-center gap-2 transform active:scale-95">
             <i data-lucide="camera" class="w-6 h-6"></i> AMBIL SELFIE & KIRIM
         </button>
@@ -432,7 +431,7 @@
                             <!-- FLATPICKR DATE INPUT -->
                             <div class="relative w-full sm:w-auto">
                                 <i data-lucide="calendar" class="absolute left-2.5 top-2 w-3.5 h-3.5 text-cyan-500 pointer-events-none"></i>
-                                <input type="text" id="filter-tanggal" onchange="filterTableAdmin()" placeholder="Pilih Tanggal..." class="w-full sm:w-36 bg-slate-950 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-300 outline-none focus:border-cyan-500 transition-colors cursor-pointer">
+                                <input type="text" id="filter-tanggal" placeholder="Pilih Tanggal..." class="w-full sm:w-40 bg-slate-950 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-300 outline-none focus:border-cyan-500 transition-colors cursor-pointer">
                             </div>
                         </div>
                     </div>
@@ -499,7 +498,6 @@
                                 <th class="p-4 font-bold text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <!-- ID KOSONG TUNGGU DATA DARI SERVER -->
                         <tbody class="text-sm text-slate-300 font-medium divide-y divide-slate-800" id="incident-log-body">
                             <tr>
                                 <td colspan="5" class="p-8 text-center text-slate-500 italic text-xs">Menunggu penarikan data dari server...</td>
@@ -552,19 +550,26 @@
         lucide.createIcons();
 
         // Init Flatpickr (Kalender Custom yang Elegan)
+        // MODIFIKASI: Tampilan kalender tetap Indonesia (d F Y), tapi nilai di belakang layarnya standar (Y-m-d)
         flatpickr("#filter-tanggal", {
-            dateFormat: "d/m/Y", // Format cocok dengan format log hari ini
+            altInput: true,
+            altFormat: "d F Y", // Tampilan untuk user: "12 Agustus 2026"
+            dateFormat: "Y-m-d", // Nilai asli yang ditangkap Javascript: "2026-08-12"
             locale: "id", // Bahasa Indonesia
-            disableMobile: "true" // Paksakan UI Flatpickr di mobile agar konsisten
+            disableMobile: "true",
+            onChange: function(selectedDates, dateStr, instance) {
+                filterTableAdmin(); // Otomatis filter pas tanggal diklik
+            }
         });
 
+        // MASUKKAN URL GOOGLE APPS SCRIPT-MU DI SINI
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx5RgaE4_TT7L9g1KMyXtkDX7r_AaP-i5n_lhEA_FLO4qGZ78ad6yp5_uNlsK8UcQ6DoQ/exec"; 
         
         let currentUser = null;
         let qrScanner = null;
         let currentStream = null;
         let scannedLocationId = null;
-        let currentFacingMode = "environment"; // Default kamera belakang
+        let currentFacingMode = "environment"; 
         let scheduleInterval = null;
 
         // DOM Elements
@@ -637,8 +642,7 @@
                         document.getElementById('admin-header-name').innerText = currentUser.nama;
                         loaderText.innerText = 'MEMUAT COMMAND CENTER...';
                         switchView(viewManagement);
-                        // JALANKAN TARIK DATA ADMIN!
-                        fetchAdminData(); 
+                        fetchAdminData(); // Tarik data saat admin login
                     } else {
                         document.getElementById('sec-name').innerText = currentUser.nama.toUpperCase();
                         document.getElementById('sec-id').innerText = `ID: ${currentUser.id || '-'} • Sedang Bertugas`;
@@ -667,7 +671,6 @@
         }
 
         // --- SCHEDULE & ALARM ENGINE ---
-        // (Masih pakai data dummy sambil nunggu backend jadwal)
         let patrolSchedules = [
             { jam: "18:00", instruksi: "Patroli Semua Titik" },
             { jam: "19:00", instruksi: "Patroli Semua Titik" },
@@ -757,7 +760,7 @@
             topBarSpacer.classList.remove('hidden');
             
             scannerTitle.innerText = "Tahap 1: SCAN QR";
-            currentFacingMode = "environment"; // Kamera belakang
+            currentFacingMode = "environment"; 
             
             modalScanner.classList.remove('hidden');
             setTimeout(() => modalScanner.classList.remove('opacity-0'), 10);
@@ -910,7 +913,6 @@
         }
 
         // --- DASHBOARD ADMIN LOGIC ---
-        
         async function fetchAdminData() {
             const tbodyPatrol = document.getElementById('patrol-log-body');
             const tbodyInsiden = document.getElementById('incident-log-body');
@@ -999,24 +1001,36 @@
             }
         }
 
-        // FUNGSI PENCARIAN & FILTER TABEL
         function filterTableAdmin() {
             const searchName = document.getElementById('filter-nama').value.toLowerCase();
-            const searchLoc = document.getElementById('filter-lokasi').value.toLowerCase(); // Isinya "Lantai 1", dll
-            const searchDate = document.getElementById('filter-tanggal').value; // Format dari flatpickr dd/mm/yyyy
+            const searchLoc = document.getElementById('filter-lokasi').value.toLowerCase(); 
+            
+            // Mengambil nilai asli kalender "2026-08-12"
+            const rawDate = document.getElementById('filter-tanggal').value; 
+            let targetSearchDate = "";
+
+            // Trik Sulap: Ubah "2026-08-12" menjadi "12 Aug 2026" agar cocok dengan teks di tabel
+            if (rawDate) {
+                const parts = rawDate.split("-"); // [0]=2026, [1]=08, [2]=12
+                const englishMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const day = parseInt(parts[2]); // ilangin angka 0 di depan (biar 08 jadi 8 kalau perlu, tapi di sini tetep ambil utuh aja)
+                const monthStr = englishMonths[parseInt(parts[1]) - 1]; 
+                targetSearchDate = `${parts[2]} ${monthStr} ${parts[0]}`; // Hasil: "12 Aug 2026"
+            }
 
             const tbodyPatrol = document.getElementById('patrol-log-body');
             const rowsPatrol = tbodyPatrol.querySelectorAll('tr:not(.empty-row):not(.filter-empty-msg)');
             let visibleCountPatrol = 0;
 
             rowsPatrol.forEach(row => {
-                const textWaktu = row.cells[0].innerText; // Misal 12/08/2026 14:00
+                const textWaktu = row.cells[0].innerText; // Misal "12 Aug 2026 13:32"
                 const textNama = row.cells[1].innerText.toLowerCase();
                 const textAreaRahasia = row.getAttribute('data-area') ? row.getAttribute('data-area').toLowerCase() : "";
 
                 const matchName = textNama.includes(searchName);
                 const matchLoc = searchLoc === "" || textAreaRahasia.includes(searchLoc);
-                const matchDate = searchDate === "" || textWaktu.includes(searchDate);
+                // Cek apakah tanggal target ada di dalam textWaktu tabel
+                const matchDate = targetSearchDate === "" || textWaktu.includes(targetSearchDate);
 
                 if (matchName && matchLoc && matchDate) {
                     row.style.display = '';
